@@ -769,12 +769,17 @@
 		$('.refer').click(function(e) {
 			e.stopPropagation();
 			var params = "stdNo="+$('#stdNo').val()+"&userName="+$('#userName').val()+"&position="+$('#position').val();
-			if($('#token') == 'test') {
-				var url = "scan.html?" + params;
+			var flag = $('#token').val();
+			
+			if(flag == "test") {
+				//var url = "scan.html?" + params;
 			} else {
-				var url = "mockqr.html?" + params;
+				//var url = "mockqr.html?" + params;
 			}
 			
+			var url = "scan.html"
+			
+			console.log(flag);
 			console.log("url =" + url);
 			//方法1 
 			window.open(url, "_self");
