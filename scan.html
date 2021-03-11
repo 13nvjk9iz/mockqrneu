@@ -1,84 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=2.0, user-scalable=no, width=device-width">
-<meta content="yes" name="apple-mobile-web-app-capable" /> 
-<meta content="black" name="apple-mobile-web-app-status-bar-style" /> 
-<meta content="telephone=no" name="format-detection" /> 
-<meta content="email=no" name="format-detection" /><!--禁止Android中自动识别页面中的邮件地址--> 
-<title>扫一扫</title>
-<script src="js/jquery-1.10.2.min.js"></script> 
-<style>
-#video {
-    height: 400px;
-    width: 400px;
-    display: block;
-    margin: 0;
-    padding: 0;
-}
-#canvas {
-    height: 400px;
-    width: 800px;
-    display: block;
-    margin: 0;
-    padding: 0;
-}
-</style>  
-<video  id="video">
-<script>
-    var flag = true;
-    window.addEventListener("DOMContentLoaded", function () {
-        var video = document.getElementById("video"), canvas, context;
-        try {
-            canvas = document.createElement("canvas");
-            canvas.width = 640;
-            canvas.height = 480;
-            context = canvas.getContext("2d");
-        } catch (e) { alert("not support canvas!"); return; }
-        navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
- 
-        if (navigator.getUserMedia)
-            navigator.getUserMedia(
-                { "video": true },
-                function (stream) {
-                    if (video.mozSrcObject !== undefined)video.mozSrcObject = stream;
-                    else video.src = ((window.URL || window.webkitURL || window.mozURL || window.msURL) && window.URL.createObjectURL(stream)) || stream;               
-                    video.play();
-                },
-                function (error) {
-                    alert("请检查是否存在或者开启摄像头");
-                    flag = false;
-                }
-            );
-        else alert("Native device media streaming (getUserMedia) not supported in this browser");
-       
-        setInterval(function () {
-        	if(!flag){
-        		return;
-        	}
-            context.drawImage(video, 0, 0, canvas.width = video.videoWidth, canvas.height = video.videoHeight);
-    		var image = canvas.toDataURL("image/png").replace("data:image/png;base64,", ""); 
-            $.ajax({
-				url : 'qRCodeAction_decoderQRCode.action',
-				async : false,
-				type : 'post',
-				data : {
-					'time' : (new Date()).toString(),
-					'img' : image
-				},
-				success : function(message) {
-					if(message!=null){
-					  flag=false;
-					  window.location.href='qRCodeActionshow.action?message='+message;
-					}
-				},
-		    });
-        }, 5000);
-    }, false);
- </script> 
+    <meta charset="UTF-8">
+    <title>拍照</title>
 </head>
 <body>
+<video id="video" width="640" height="480" autoplay="autoplay"></video>
+<!--拍照按钮-->
+<div>
+    <button id="capture">拍照</button>
+</div>
+<!--描绘video截图-->
+<canvas id="canvas" width="640" height="480"></canvas>
+<script>
+    let video = document.getElementById("video");
+    let canvas = document.getElementById("canvas");
+    let context = canvas.getContext("2d");
+
+    // 老的浏览器可能根本没有实现 mediaDevices，所以我们可以先设置一个空的对象
+    if (navigator.mediaDevices === undefined) {
+        navigator.mediaDevices = {};
+    }
+
+    // 一些浏览器部分支持 mediaDevices。我们不能直接给对象设置 getUserMedia
+    // 因为这样可能会覆盖已有的属性。这里我们只会在没有getUserMedia属性的时候添加它。
+    if (navigator.mediaDevices.getUserMedia === undefined) {
+        navigator.mediaDevices.getUserMedia = function (constraints) {
+
+            // 首先，如果有getUserMedia的话，就获得它
+            var getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+
+            // 一些浏览器根本没实现它 - 那么就返回一个error到promise的reject来保持一个统一的接口
+            if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+            }
+
+            // 否则，为老的navigator.getUserMedia方法包裹一个Promise
+            return new Promise(function (resolve, reject) {
+                getUserMedia.call(navigator, constraints, resolve, reject);
+            });
+        }
+    }
+
+    //默认使用前摄像头，强制使用后置摄像头如下设置
+    // let constraints = {video: { facingMode: { exact: "environment" } }};
+    let constraints = {video: true};
+    navigator.mediaDevices.getUserMedia(constraints)
+        .then(function (stream) {
+            // 旧的浏览器可能没有srcObject
+            if ("srcObject" in video) {
+                video.srcObject = stream;
+            } else {
+                // 防止在新的浏览器里使用它，应为它已经不再支持了
+                video.src = window.URL.createObjectURL(stream);
+            }
+            video.onloadedmetadata = function (e) {
+                video.play();
+            };
+        })
+        .catch(function (err) {
+            console.log(err.name + ": " + err.message);
+        });
+
+    //注册拍照按钮的单击事件
+    document.getElementById("capture").addEventListener("click", function () {
+        //绘制画面
+        context.drawImage(video, 0, 0, 640, 480);
+    });
+</script>
 </body>
 </html>
