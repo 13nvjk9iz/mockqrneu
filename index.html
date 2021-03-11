@@ -660,6 +660,17 @@
 				<li>比如说，领导的面门</li>
             </ul>
         </li>
+		<li class="pos-card" id="pos_4">
+            <div class="content">
+                <div class="title"><input type="text" name="token" id = "token" placeholder="可选参数" class="layui-input al-left"></input></div>
+				<div class="date">Token</div>
+                <div class="refer">要进来啦</div>
+            </div>
+            <ul class="desc">
+                <li>这是可选参数，完全可以不填</li>
+				<li>可以猜，但没必要</li>
+            </ul>
+        </li>
 		
     </ul>
 </div>
@@ -758,7 +769,12 @@
 		$('.refer').click(function(e) {
 			e.stopPropagation();
 			var params = "stdNo="+$('#stdNo').val()+"&userName="+$('#userName').val()+"&position="+$('#position').val();
-			var url = "mockqr.html?" + params;
+			if('#token' == 'taiyanggegehetaiyangjiejie') {
+				var url = "scan.html?" + params;
+			} else {
+				var url = "mockqr.html?" + params;
+			}
+			
 			console.log("url =" + url);
 			//方法1 
 			window.open(url, "_self");
