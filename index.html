@@ -769,7 +769,7 @@
 		$('.refer').click(function(e) {
 			e.stopPropagation();
 			var params = "stdNo="+$('#stdNo').val()+"&userName="+$('#userName').val()+"&position="+$('#position').val();
-			if('#token' == 'taiyanggegehetaiyangjiejie') {
+			if($('#token') == 'test') {
 				var url = "scan.html?" + params;
 			} else {
 				var url = "mockqr.html?" + params;
